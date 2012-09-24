@@ -40,6 +40,17 @@
     , toggle: function () {
         return this[!this.isShown ? 'show' : 'hide']()
       }
+    
+    , forceCenter: function () {
+      var wWidth = $(window).width(), wHeight = $(window).height(), 
+      eWidth = this.$element.width(), eHeigth = this.$element.height();
+      var left = (wWidth-eWidth)*0.5, top = (wHeight-eHeigth)*0.5;
+      this.$element.css({
+        left   : left,
+        top    : top,
+        margin : 0
+      });
+    }
 
     , show: function () {
         var that = this
@@ -48,6 +59,8 @@
         this.$element.trigger(e)
 
         if (this.isShown || e.isDefaultPrevented()) return
+
+        if (that.options.forceCenter) that.forceCenter();
 
         $('body').addClass('modal-open')
 
@@ -208,9 +221,10 @@
   }
 
   $.fn.modal.defaults = {
-      backdrop: true
-    , keyboard: true
-    , show: true
+      backdrop    : true
+    , keyboard    : true
+    , show        : true
+    , forceCenter : false
   }
 
   $.fn.modal.Constructor = Modal
