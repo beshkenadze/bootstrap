@@ -1,5 +1,5 @@
 /* =========================================================
- * bootstrap-modal.js v2.2.1
+ * bootstrap-modal.js v2.1.1
  * http://twitter.github.com/bootstrap/javascript.html#modals
  * =========================================================
  * Copyright 2012 Twitter, Inc.
@@ -40,6 +40,17 @@
     , toggle: function () {
         return this[!this.isShown ? 'show' : 'hide']()
       }
+    
+    , forceCenter: function () {
+      var wWidth = $(window).width(), wHeight = $(window).height(), 
+      eWidth = this.$element.width(), eHeigth = this.$element.height();
+      var left = (wWidth-eWidth)*0.5, top = (wHeight-eHeigth)*0.5;
+      this.$element.css({
+        left   : left,
+        top    : top,
+        margin : 0
+      });
+    }
 
     , show: function () {
         var that = this
@@ -48,6 +59,10 @@
         this.$element.trigger(e)
 
         if (this.isShown || e.isDefaultPrevented()) return
+
+        if (that.options.forceCenter) that.forceCenter();
+
+        $('body').addClass('modal-open')
 
         this.isShown = true
 
@@ -70,12 +85,13 @@
           that.$element
             .addClass('in')
             .attr('aria-hidden', false)
+            .focus()
 
           that.enforceFocus()
 
           transition ?
-            that.$element.one($.support.transition.end, function () { that.$element.focus().trigger('shown') }) :
-            that.$element.focus().trigger('shown')
+            that.$element.one($.support.transition.end, function () { that.$element.trigger('shown') }) :
+            that.$element.trigger('shown')
 
         })
       }
@@ -92,6 +108,8 @@
         if (!this.isShown || e.isDefaultPrevented()) return
 
         this.isShown = false
+
+        $('body').removeClass('modal-open')
 
         this.escape()
 
@@ -162,11 +180,9 @@
           this.$backdrop = $('<div class="modal-backdrop ' + animate + '" />')
             .appendTo(document.body)
 
-          this.$backdrop.click(
-            this.options.backdrop == 'static' ?
-              $.proxy(this.$element[0].focus, this.$element[0])
-            : $.proxy(this.hide, this)
-          )
+          if (this.options.backdrop != 'static') {
+            this.$backdrop.click($.proxy(this.hide, this))
+          }
 
           if (doAnimate) this.$backdrop[0].offsetWidth // force reflow
 
@@ -205,9 +221,10 @@
   }
 
   $.fn.modal.defaults = {
-      backdrop: true
-    , keyboard: true
-    , show: true
+      backdrop    : true
+    , keyboard    : true
+    , show        : true
+    , forceCenter : false
   }
 
   $.fn.modal.Constructor = Modal
@@ -216,19 +233,23 @@
  /* MODAL DATA-API
   * ============== */
 
-  $(document).on('click.modal.data-api', '[data-toggle="modal"]', function (e) {
-    var $this = $(this)
-      , href = $this.attr('href')
-      , $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) //strip for ie7
-      , option = $target.data('modal') ? 'toggle' : $.extend({ remote:!/#/.test(href) && href }, $target.data(), $this.data())
+  $(function () {
+    $('body').on('click.modal.data-api', '[data-toggle="modal"]', function ( e ) {
+      var $this = $(this)
+        , href = $this.attr('href')
+        , $target = $($this.attr('data-target') || (href && href.replace(/.*(?=#[^\s]+$)/, ''))) //strip for ie7
+        , option = $target.data('modal') ? 'toggle' : $.extend({ remote: !/#/.test(href) && href }, $target.data(), $this.data())
 
-    e.preventDefault()
+      e.preventDefault()
+      
+      if($this.hasClass('disabled')) return;
 
-    $target
-      .modal(option)
-      .one('hide', function () {
-        $this.focus()
-      })
+      $target
+        .modal(option)
+        .one('hide', function () {
+          $this.focus()
+        })
+    })
   })
 
 }(window.jQuery);
